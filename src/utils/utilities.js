@@ -61,10 +61,10 @@ export const switchDealersScore = (hand) => {
 
 export const compareTotal = (you,dealer) => {
     if(you > dealer){
-        return "YOU WIN!!";
+        return "YOU WIN ^^b";
     } else if(you === dealer){
         return "DRAW";
     } else {
-        return "YOU LOSE T_T";
+        return "YOU LOSE (;o;)";
     }
 }

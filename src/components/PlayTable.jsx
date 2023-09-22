@@ -10,7 +10,7 @@ export const PlayTable = () => {
   const [yourHand,setYourHand] = useState([]);
   const [yourScore,setYourScore] = useState(0);
   const [dealersHand,setDealersHand] = useState([]);
-  const [dealersPileHand,setDealersPileHand] = useState([]);
+  const [pileHand,setPileHand] = useState([]);
   const [dealersScore,setDealersScore] = useState(0);
   const [deckId,setDeckId] = useState("");
   const [haveAce,setHaveAce] = useState(false);
@@ -27,7 +27,10 @@ export const PlayTable = () => {
     utilities.makeNewDeck()
     .then((res) => {
       setDeckId(res.deck_id);
+      pileDraw(res.deck_id);
     })
+    
+
   },[])
 
   const yourScoreCalc = (arr) => {
@@ -59,7 +62,7 @@ export const PlayTable = () => {
       isBlackJack();
     }
     if(yourScore > 21){
-      setWinOrLose("YOU BUST! YOU LOSE!!");
+      setWinOrLose("YOU BUST (;o;)");
       setModal(true);
     } 
     if(utilities.isMinimum(yourScore)){
@@ -78,7 +81,7 @@ export const PlayTable = () => {
       isDealerBlackJack();
     }
     if(dealersScore > 21){
-      setWinOrLose("DEALER BUST!! YOU WIN");
+      setWinOrLose("DEALER BUST!! ^^b");
       setModal(true);
     } 
     if(dealersScore > 16 && dealersScore <= 21){
@@ -96,43 +99,35 @@ export const PlayTable = () => {
     }
   },[dealersScore])
 
-  const startYourTurn = (url) => {
-    dealerDraw(url,1);
-    yourDraw(url,2);
-  }
-
-  const dealerPileDraw = (url) => {
-    utilities.drawCard(url,10)
+  const pileDraw = (url) => {
+    utilities.drawCard(url,15)
       .then((res) => {
-        let newArray = [...dealersPileHand];
+        let newArray = [...pileHand];
         for(const card of res.cards){
           newArray = [...newArray, card];
         }
-        setDealersPileHand(newArray);
+        setPileHand(newArray);
       })
   }
 
-  const dealerDraw = (url,num) => {
-    utilities.drawCard(url,num)
-      .then((res) => {
-        const newArray = [...dealersHand, res.cards[0]];
-        setDealersHand(newArray);
-        dealersScoreCalc(newArray);
-      })
+  const dealerDraw = () => {
+    let newArray = [...dealersHand];
+    newArray.push(pileHand[0]);
+    pileHand.shift();
+    setDealersHand(newArray);
+    dealersScoreCalc(newArray);
   }
 
-  const yourDraw = (url,num) => {
-    utilities.drawCard(url,num)
-      .then((res) => {
-        let newArray = [...yourHand];
-        for(const card of res.cards){
-          newArray = [...newArray, card];
-        }
-        setYourHand(newArray);
-        yourScoreCalc(newArray);
-      })
+  const yourDraw = (num) => {
+    let newArray = [...yourHand];
+    for(let i=0;i < num;i++){
+      newArray.push(pileHand[i]);
+      pileHand.shift();
+    }
+    setYourHand(newArray);
+    yourScoreCalc(newArray);
   }
-
+  
   const isBlackJack = () => {
     if(haveAce && yourScore === 11){
       // dealerDraw(deckId,1);
@@ -153,8 +148,8 @@ export const PlayTable = () => {
   const dealersTurn = () => {
     let newArray = [...dealersHand];
     while(cardsValueA < 17){
-      newArray.push(dealersPileHand[0]);
-      dealersPileHand.shift();
+      newArray.push(pileHand[0]);
+      pileHand.shift();
       cardsValueA = 0
       for(const card of newArray){
         const cardValue = utilities.checkValue(card)
@@ -173,7 +168,7 @@ export const PlayTable = () => {
     setYourScore(0);
     setDealersHand(newArray);
     setDealersScore(0);
-    setDealersPileHand([]);
+    setPileHand([]);
     setHaveAce(false);
     setHasAce(false);
     setLargeDealersScore(0);
@@ -181,10 +176,11 @@ export const PlayTable = () => {
     setIsYouMinimum(false);
     setIsDealerMinimum(false);
     setIsStart(false);
+    pileDraw(deckId);
   }
 
   const doHit = () => {
-    yourDraw(deckId,1);
+    yourDraw(1);
   }
 
   const doStand = () => {
@@ -199,8 +195,8 @@ export const PlayTable = () => {
   }
 
   const handleStart = () => {
-    startYourTurn(deckId);
-    dealerPileDraw(deckId);
+    dealerDraw();
+    yourDraw(2);
     setIsStart(true);
   }
 
