@@ -33,7 +33,52 @@ export const PlayTable = () => {
       })
   },[])
 
-// スコアの計算
+  // APIをフェッチしてパイルにカードを15枚引く
+
+  const pileDraw = (url) => {
+    utilities.drawCard(url,15)
+      .then((res) => {
+        let newArray = [];
+        for(const card of res.cards){
+          newArray = [...newArray, card];
+        }
+        setPileHand(newArray);
+        // デッキのカードが50枚より少なくなったら新しいデッキを作成する
+        if(res.remaining < 50){
+          utilities.makeNewDeck()
+            .then((res) => {
+              setDeckId(res.deck_id);
+            })
+        }
+      })
+  }
+
+
+
+// プレイヤーのスコアが変わるたびに発火する
+
+  useEffect(() => {
+    if(yourHand.length === 2 && haveAce && yourScore === 11){
+        setWinOrLose("BLACK JACK!!");
+        setModal(true);
+        setIsYouMinimum(false);
+    }
+    if(yourScore > 21){
+      setWinOrLose("YOU BUST (;o;)");
+      setModal(true);
+    } 
+    if(utilities.isMinimum(yourScore)){
+      setIsYouMinimum(true);
+    } else {
+      setIsYouMinimum(false);
+    }
+    if(haveAce && isYouMinimum){
+      const score = yourScore + 10;
+      setLargeYourScore(score);
+    }
+  },[yourScore])
+
+  // スコアの計算
 
   const yourScoreCalc = (arr) => {
     let cardsValue = 0;
@@ -52,91 +97,22 @@ export const PlayTable = () => {
     for(const card of arr){
       const cardValue = utilities.checkValue(card)
       cardsValue += cardValue;
-      if(utilities.checkHaveAce(card)){
-        setHasAce(true);
-      }
+    }
+    if(arr.length === 1 && cardsValue === 1){
+      setHasAce(true);
+      setLargeDealersScore(11);
+      setIsDealerMinimum(true);
     }
     setDealersScore(cardsValue);
-  }
-
-// ディーラーとプレイヤーのスコアが変わるたびに発火する
-
-  useEffect(() => {
-    if(yourHand.length === 2){
-      isBlackJack();
-    }
-    if(yourScore > 21){
-      setWinOrLose("YOU BUST (;o;)");
-      setModal(true);
-    } 
-    if(utilities.isMinimum(yourScore)){
-      setIsYouMinimum(true);
-    } else {
-      setIsYouMinimum(false);
-    }
-    if(haveAce && isYouMinimum){
-      const score = yourScore + 10;
-      setLargeYourScore(score);
-    }
-  },[yourScore])
-
-  useEffect(() => {
-    if(dealersHand.length === 2){
-      isDealerBlackJack();
-    }
-    if(dealersScore > 21){
-      setWinOrLose("DEALER BUST!! ^^b");
-      setModal(true);
-    } 
-    if(dealersScore > 16 && dealersScore <= 21 && haveAce && isYouMinimum && hasAce && isDealerMinimum){
-      setWinOrLose(utilities.compareTotal(largeYourScore,largeDealersScore));
-      setModal(true);
-    } else if( dealersScore > 16 && dealersScore <= 21 && haveAce && isYouMinimum ){
-      setWinOrLose(utilities.compareTotal(largeYourScore,dealersScore));
-      setModal(true);
-    } else if( dealersScore > 16 && dealersScore <= 21 && hasAce && isDealerMinimum ){
-      setWinOrLose(utilities.compareTotal(yourScore,largeDealersScore));
-      setModal(true);
-    } else if(dealersScore > 16 && dealersScore <= 21){
-      setWinOrLose(utilities.compareTotal(yourScore,dealersScore));
-      setModal(true);
-    }
-    if(utilities.isMinimum(dealersScore)){
-      setIsDealerMinimum(true);
-    } else {
-      setIsDealerMinimum(false);
-    }
-    if(hasAce && isDealerMinimum){
-      const score = dealersScore + 10;
-      setLargeDealersScore(score);
-    }
-  },[dealersScore])
-
-// APIをフェッチしてパイルにカードを15枚引く
-
-  const pileDraw = (url) => {
-    utilities.drawCard(url,15)
-      .then((res) => {
-        let newArray = [];
-        for(const card of res.cards){
-          newArray = [...newArray, card];
-        }
-        setPileHand(newArray);
-        // デッキのカードが30枚より少なくなったら新しいデッキを作成する
-        if(res.remaining < 30){
-          utilities.makeNewDeck()
-            .then((res) => {
-              setDeckId(res.deck_id);
-            })
-        }
-      })
   }
 
 // パイルからカードを引く
 
   const dealerDraw = () => {
-    let newArray = [...dealersHand];
-    newArray.push(pileHand[0]);
+    let newArray = [];
+    const newHand = pileHand[0];
+    const cardValue = utilities.checkValue(newHand);
+    newArray.push(newHand);
     pileHand.shift();
     setDealersHand(newArray);
     dealersScoreCalc(newArray);
@@ -151,40 +127,71 @@ export const PlayTable = () => {
     setYourHand(newArray);
     yourScoreCalc(newArray);
   }
-  
-// ブラックジャックかチェック
-
-  const isBlackJack = () => {
-    if(haveAce && yourScore === 11){
-      setWinOrLose("BLACK JACK!!");
-      setModal(true);
-    }
-  }
-
-  const isDealerBlackJack = () => {
-    if(hasAce && dealersScore === 11){
-      setWinOrLose("Dealer BLACK JACK!!");
-      setModal(true);
-    }
-  }
 
 // ディーラーのターン」
 
-  let cardsValueA = 0
+  
 
-  const dealersTurn = () => {
+  const dealersTurn = (score) => {
     let newArray = [...dealersHand];
-    while(cardsValueA < 17){
-      newArray.push(pileHand[0]);
+    let cardsValueA = 0
+    let isFinish = false;
+    let aceFlag = hasAce;
+    let minimumFlag = false;
+    isFinish = false;
+    aceFlag = hasAce;
+    while(!isFinish){
+      const newHand = pileHand[0]
+      newArray.push(newHand);
       pileHand.shift();
+      if(utilities.checkHaveAce(newHand)){
+        setHasAce(true);
+        aceFlag = true;
+      }
       cardsValueA = 0
       for(const card of newArray){
         const cardValue = utilities.checkValue(card)
         cardsValueA += cardValue;
       }
+      if(newArray.length === 2 && aceFlag && cardsValueA === 11){
+        setWinOrLose("Dealer BLACK JACK!!");
+        setModal(true);
+        setDealersHand(newArray);
+        setIsDealerMinimum(false);
+        setDealersScore(21);
+        isFinish = true;
+        break;
+      }
+      if(cardsValueA <= 11){
+        setIsDealerMinimum(true);
+        minimumFlag = true;
+      } else {
+        setIsDealerMinimum(false);
+        minimumFlag = false;
+      }
+      if(minimumFlag && aceFlag){
+        setLargeDealersScore(cardsValueA + 10);
+      }
+      if(cardsValueA > 21){
+        setWinOrLose("DEALER BUST!! ^^b");
+        setModal(true);
+        // isFinish(true);
+        isFinish = true;
+      } 
+      if(cardsValueA >= 7 && cardsValueA <= 11 && aceFlag){
+        setWinOrLose(utilities.compareTotal(score,(cardsValueA + 10)));
+        setModal(true);
+        // isFinish(true);
+        isFinish = true;
+      } else if(cardsValueA > 16 && cardsValueA <= 21){
+        setWinOrLose(utilities.compareTotal(score,cardsValueA));
+        setModal(true);
+        // isFinish(true);
+        isFinish = true;
+      }
+      setDealersHand(newArray);
+      dealersScoreCalc(newArray);
     }
-    setDealersHand(newArray);
-    dealersScoreCalc(newArray);
   }
 
 // ボタンアクション
@@ -213,7 +220,12 @@ export const PlayTable = () => {
   }
 
   const doStand = () => {
-    dealersTurn();
+    if(haveAce && isYouMinimum){
+      setYourScore(largeYourScore);
+      dealersTurn(largeYourScore);
+    } else{
+    dealersTurn(yourScore);
+    }
   };
 
   const handleStart = () => {
