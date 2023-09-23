@@ -17,12 +17,7 @@ export const makeNewDeck = async () => {
     return res;
 };
 
-// export const setEnemyHand = (card) => {
-//     state.enemyHand = [...state.enemyHand, card];
-// }
-
 export const checkValue = (card) => {
-    // console.log(card.value);
         switch (card.value){
             case 'ACE': return 1
             case 'JACK': return 10;
@@ -42,18 +37,6 @@ export const checkHaveAce = (card) => {
 
 export const isMinimum = (score) => {
     if((score + 10) <= 21){
-        return true;
-    }
-    return false;
-}
-
-export const switchDealersScore = (hand) => {
-    let total = 0;
-    for(let card of hand){
-        console.log(card.value);
-        total += checkValue(card.value);
-    }
-    if(total < 17){
         return true;
     }
     return false;
