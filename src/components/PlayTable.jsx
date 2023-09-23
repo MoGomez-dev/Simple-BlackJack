@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import * as utilities from '../utils/utilities'
 import { WhatDoYouDoButton } from './WhatDoYouDoButton';
 import { Modal } from './Modal';
-import { ShuffleOrStartButton } from './ShuffleOrStartButton';
+import { RulesAndStartButton } from './RulesAndStartButton';
 
 export const PlayTable = () => {
   const [modal,setModal] = useState(false);
@@ -23,15 +23,17 @@ export const PlayTable = () => {
 
   const backOfCardImage = 'https://www.deckofcardsapi.com/static/img/back.png' ;
 
+  // 初回レンダリング時に新しいデッキを作成
+
   useEffect(() => {
     utilities.makeNewDeck()
-    .then((res) => {
-      setDeckId(res.deck_id);
-      pileDraw(res.deck_id);
-    })
-    
-
+      .then((res) => {
+        setDeckId(res.deck_id);
+        pileDraw(res.deck_id);
+      })
   },[])
+
+// スコアの計算
 
   const yourScoreCalc = (arr) => {
     let cardsValue = 0;
@@ -56,6 +58,8 @@ export const PlayTable = () => {
     }
     setDealersScore(cardsValue);
   }
+
+// ディーラーとプレイヤーのスコアが変わるたびに発火する
 
   useEffect(() => {
     if(yourHand.length === 2){
@@ -99,16 +103,27 @@ export const PlayTable = () => {
     }
   },[dealersScore])
 
+// APIをフェッチしてパイルにカードを15枚引く
+
   const pileDraw = (url) => {
     utilities.drawCard(url,15)
       .then((res) => {
-        let newArray = [...pileHand];
+        let newArray = [];
         for(const card of res.cards){
           newArray = [...newArray, card];
         }
         setPileHand(newArray);
+        // デッキのカードが30枚より少なくなったら新しいデッキを作成する
+        if(res.remaining < 30){
+          utilities.makeNewDeck()
+            .then((res) => {
+              setDeckId(res.deck_id);
+            })
+        }
       })
   }
+
+// パイルからカードを引く
 
   const dealerDraw = () => {
     let newArray = [...dealersHand];
@@ -128,9 +143,10 @@ export const PlayTable = () => {
     yourScoreCalc(newArray);
   }
   
+// ブラックジャックかチェック
+
   const isBlackJack = () => {
     if(haveAce && yourScore === 11){
-      // dealerDraw(deckId,1);
       setWinOrLose("BLACK JACK!!");
       setModal(true);
     }
@@ -142,6 +158,8 @@ export const PlayTable = () => {
       setModal(true);
     }
   }
+
+// ディーラーのターン」
 
   let cardsValueA = 0
 
@@ -159,6 +177,8 @@ export const PlayTable = () => {
     setDealersHand(newArray);
     dealersScoreCalc(newArray);
   }
+
+// ボタンアクション
 
   const resetGame = () => {
     let newArray = [];
@@ -186,13 +206,6 @@ export const PlayTable = () => {
   const doStand = () => {
     dealersTurn();
   };
-
-  const handleShuffle = () => {
-    utilities.makeNewDeck()
-    .then((res) => {
-      setDeckId(res.deck_id);
-    })
-  }
 
   const handleStart = () => {
     dealerDraw();
@@ -222,7 +235,7 @@ export const PlayTable = () => {
           {(haveAce && isYouMinimum) ? <p>{yourScore}|{largeYourScore}</p> : <p>{yourScore}</p>}
         </div>
       }
-            {isStart ? <WhatDoYouDoButton doHit={doHit} doStand={doStand} /> : <ShuffleOrStartButton handleShuffle={handleShuffle} handleStart={handleStart} /> }
+            {isStart ? <WhatDoYouDoButton doHit={doHit} doStand={doStand} /> : <RulesAndStartButton handleStart={handleStart} /> }
     </div>
   )
 }
