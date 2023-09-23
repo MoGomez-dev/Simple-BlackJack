@@ -175,18 +175,15 @@ export const PlayTable = () => {
       if(cardsValueA > 21){
         setWinOrLose("DEALER BUST!! ^^b");
         setModal(true);
-        // isFinish(true);
         isFinish = true;
       } 
       if(cardsValueA >= 7 && cardsValueA <= 11 && aceFlag){
         setWinOrLose(utilities.compareTotal(score,(cardsValueA + 10)));
         setModal(true);
-        // isFinish(true);
         isFinish = true;
       } else if(cardsValueA > 16 && cardsValueA <= 21){
         setWinOrLose(utilities.compareTotal(score,cardsValueA));
         setModal(true);
-        // isFinish(true);
         isFinish = true;
       }
       setDealersHand(newArray);
