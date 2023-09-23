@@ -88,7 +88,16 @@ export const PlayTable = () => {
       setWinOrLose("DEALER BUST!! ^^b");
       setModal(true);
     } 
-    if(dealersScore > 16 && dealersScore <= 21){
+    if(dealersScore > 16 && dealersScore <= 21 && haveAce && isYouMinimum && hasAce && isDealerMinimum){
+      setWinOrLose(utilities.compareTotal(largeYourScore,largeDealersScore));
+      setModal(true);
+    } else if( dealersScore > 16 && dealersScore <= 21 && haveAce && isYouMinimum ){
+      setWinOrLose(utilities.compareTotal(largeYourScore,dealersScore));
+      setModal(true);
+    } else if( dealersScore > 16 && dealersScore <= 21 && hasAce && isDealerMinimum ){
+      setWinOrLose(utilities.compareTotal(yourScore,largeDealersScore));
+      setModal(true);
+    } else if(dealersScore > 16 && dealersScore <= 21){
       setWinOrLose(utilities.compareTotal(yourScore,dealersScore));
       setModal(true);
     }
