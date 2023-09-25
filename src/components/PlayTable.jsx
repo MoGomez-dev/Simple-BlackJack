@@ -236,24 +236,23 @@ export const PlayTable = () => {
       {modal && <Modal winOrLose={winOrLose} resetGame={resetGame} />}
       {isStart && 
         <div className='table'>
-          <h3>Dealer</h3>
+          {(hasAce && isDealerMinimum) ? <h3>Dealer:{dealersScore}|{largeDealersScore}</h3> : <h3>Dealer:{dealersScore}</h3>}
           <div className='cardArea'>
             {dealersHand?.map((card,index) => {
               return <img  key={index} src={card.image} alt="card" className='card'/>
             })}
             {(dealersHand.length === 1) && <img src={backOfCardImage} alt="card" className='card' />  }
           </div>
-          {(hasAce && isDealerMinimum) ? <p>{dealersScore}|{largeDealersScore}</p> : <p>{dealersScore}</p>}
-          <h3>You</h3>
           <div className='cardArea'>
             {yourHand?.map((card,index) => {
               return <img  key={index} src={card.image} alt="card" className='card'/>
             })}
           </div>
-          {(haveAce && isYouMinimum) ? <p>{yourScore}|{largeYourScore}</p> : <p>{yourScore}</p>}
+          {(haveAce && isYouMinimum) ? <h3>You:{yourScore}|{largeYourScore}</h3> : <h3>You:{yourScore}</h3>}
+          <WhatDoYouDoButton doHit={doHit} doStand={doStand} />
         </div>
       }
-            {isStart ? <WhatDoYouDoButton doHit={doHit} doStand={doStand} /> : <RulesAndStartButton handleStart={handleStart} /> }
+      {isStart || <RulesAndStartButton handleStart={handleStart} />}
     </div>
   )
 }
