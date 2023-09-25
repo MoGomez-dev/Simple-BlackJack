@@ -9,7 +9,7 @@ body {
 }
 
 .card {
-    height: 180px;
+    height: 150px;
     width: auto;
 }
 
@@ -38,8 +38,9 @@ body {
 }
 
 .cardArea {
-  height: 180px;
+  height: 150px;
   width: auto;
+  margin: 5px;
 }
 
 .container {
@@ -52,7 +53,7 @@ body {
 }
 
 .table {
-  height: 80vh;
+  height: 80%;
   width: auto;
   display: flex;
   flex-direction: column;
@@ -61,7 +62,7 @@ body {
 }
 
 .is-start-true {
-  height: 18vh;
+  height: 15vh;
   width: auto;
 }
 
